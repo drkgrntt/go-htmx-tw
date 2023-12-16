@@ -1,10 +1,12 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"time"
 
 	"github.com/drkgrntt/htmx-test/controllers"
+	"github.com/drkgrntt/htmx-test/utils"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/template/html/v2"
 )
@@ -25,5 +27,7 @@ func main() {
 
 	controllers.InitializeControllers(app)
 
-	log.Fatal(app.Listen(":42069"))
+	config := utils.GetConfig()
+
+	log.Fatal(app.Listen(fmt.Sprintf(":%s", config.ServerPort)))
 }
