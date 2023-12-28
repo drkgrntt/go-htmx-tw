@@ -1,0 +1,23 @@
+<div
+  class="my-8 p-4  rounded-md shadow-md
+  {{ if and (not .IsPublished) .IsBeforeDate }}
+    bg-pink-50
+  {{ else if not .IsPublished }}
+    bg-red-50
+  {{ else if .IsBeforeDate }}
+    bg-blue-50
+  {{ else }}
+    bg-white
+  {{ end }}"
+>
+  <h3 class="text-xl font-semibold mb-2">{{ .Title }}</h3>
+  <p class="text-gray-600">{{ .Date.Format "January 2, 2006" }}</p>
+
+  <div md class="mt-4 whitespace-pre text-wrap">{{ .ContentPreview }}</div>
+
+  {{ if .HasPreview }}
+  <a href="/blog/{{ .Id }}" class="text-blue-500 hover:underline font-semibold"
+    >Read more</a
+  >
+  {{ end }}
+</div>

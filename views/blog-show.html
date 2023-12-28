@@ -1,0 +1,16 @@
+<div class="mx-auto max-w-2xl w-full p-8 rounded-md">
+  <h1 class="text-3xl font-semibold mb-4">{{ .Blog.Title }}</h1>
+  <p class="text-gray-600 mb-4">{{ .Blog.Date.Format "January 2, 2006" }}</p>
+  <div md class="flex flex-col gap-4">{{ .Blog.Content }}</div>
+  <a href="/blog" class="text-blue-500 hover:underline mt-4 inline-block"
+    >&larr; Back to Blog</a
+  >
+</div>
+
+<script>
+  window.addEventListener("load", function () {
+    document.querySelectorAll("[md]").forEach(function (element) {
+      element.innerHTML = marked.parse(element.innerHTML);
+    });
+  });
+</script>

@@ -1,10 +1,18 @@
-<form hx-post="/api/blog" hx-trigger="submit" class="flex flex-col space-y-4">
+<form
+  hx-post="/api/blog"
+  hx-trigger="submit"
+  class="flex flex-col space-y-4"
+  hx-swap="afterbegin"
+  hx-target="#blog-list"
+  hx-on="htmx:afterRequest:resetForm(event)"
+>
   <div class="flex space-x-4">
     <div class="w-1/2">
       <label for="text-input" class="block text-sm font-medium text-gray-600"
         >Title</label
       >
       <input
+        required
         type="text"
         id="text-input"
         name="title"
@@ -17,6 +25,7 @@
         >Date</label
       >
       <input
+        required
         type="date"
         id="date-input"
         name="date"
@@ -25,7 +34,7 @@
     </div>
   </div>
 
-  <div class="mb-4">
+  <div>
     <label for="textarea" class="block text-sm font-medium text-gray-600"
       >Content</label
     >
@@ -35,6 +44,16 @@
       rows="4"
       class="mt-1 p-2 w-full border rounded-md"
     ></textarea>
+  </div>
+
+  <div class="flex items-center mb-4">
+    <input
+      type="checkbox"
+      id="publish"
+      name="publish"
+      class="form-checkbox h-5 w-5 text-cyan-500"
+    />
+    <label for="publish" class="ml-2 text-gray-700">Publish</label>
   </div>
 
   <div>
@@ -49,4 +68,10 @@
 
 <script>
   const easyMDE = new EasyMDE();
+  function resetForm(event) {
+    if (event.detail.successful) {
+      event.target.reset();
+      easyMDE.value("");
+    }
+  }
 </script>
