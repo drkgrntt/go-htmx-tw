@@ -1,8 +1,6 @@
 package controllers
 
 import (
-	"log"
-
 	"github.com/drkgrntt/htmx-test/utils"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/logger"
@@ -26,11 +24,6 @@ func InitializeControllers(app *fiber.App) {
 }
 
 func (c *Controller) registerRoutes(app *fiber.App) {
-	config, err := utils.LoadConfig(".")
-	if err != nil {
-		log.Fatal("? Could not load environment variables", err)
-	}
-
 	views := app.Group("/")
 	views.Get("metrics", monitor.New())
 
@@ -42,8 +35,10 @@ func (c *Controller) registerRoutes(app *fiber.App) {
 	api.Use(logger.New())
 
 	NewContactController(views, api)
+	NewBlogController(views, api)
 
 	// Route to display all routes.
+	config := utils.GetConfig()
 	// TODO: This could be massaged to be a decent API documentation
 	if config.Environment != "production" {
 		views.Get("/routes", func(c *fiber.Ctx) error {

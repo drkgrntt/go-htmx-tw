@@ -1,0 +1,52 @@
+<form hx-post="/api/blog" hx-trigger="submit" class="flex flex-col space-y-4">
+  <div class="flex space-x-4">
+    <div class="w-1/2">
+      <label for="text-input" class="block text-sm font-medium text-gray-600"
+        >Title</label
+      >
+      <input
+        type="text"
+        id="text-input"
+        name="title"
+        class="mt-1 p-2 w-full border rounded-md"
+      />
+    </div>
+
+    <div class="w-1/2">
+      <label for="date-input" class="block text-sm font-medium text-gray-600"
+        >Date</label
+      >
+      <input
+        type="date"
+        id="date-input"
+        name="date"
+        class="mt-1 p-2 w-full border rounded-md"
+      />
+    </div>
+  </div>
+
+  <div class="mb-4">
+    <label for="textarea" class="block text-sm font-medium text-gray-600"
+      >Content</label
+    >
+    <textarea
+      id="textarea"
+      name="content"
+      rows="4"
+      class="mt-1 p-2 w-full border rounded-md"
+    ></textarea>
+  </div>
+
+  <div>
+    <button
+      type="submit"
+      class="w-full bg-cyan-500 text-white p-2 rounded-md hover:bg-cyan-600"
+    >
+      Submit
+    </button>
+  </div>
+</form>
+
+<script>
+  const easyMDE = new EasyMDE();
+</script>
