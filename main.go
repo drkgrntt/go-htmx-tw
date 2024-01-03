@@ -27,6 +27,7 @@ func main() {
 	})
 
 	app.Use(func(c *fiber.Ctx) error {
+		c.Locals("IsAdmin", config.Environment == "development")
 		c.Locals("Year", time.Now().Year())
 		c.Locals("Environment", config.Environment)
 		return c.Next()
