@@ -1,0 +1,64 @@
+package layout
+
+import (
+  "github.com/gofiber/fiber/v2"
+  "fmt"
+)
+
+templ Render(c *fiber.Ctx) {
+  <!DOCTYPE html>
+  <html lang="en">
+    <head>
+      <meta charset="UTF-8" />
+      <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <title>Derek Garnett - Tech Solutions Specialist</title>
+
+      <!-- HTMX -->
+      <script
+        src="https://unpkg.com/htmx.org@1.9.6"
+        integrity="sha384-FhXw7b6AlE/jyjlZH5iHa/tTe9EpJ1Y55RjcgPbjeWMskSxZt1v9qkxLJWNJaGni"
+        crossorigin="anonymous"
+      ></script>
+
+      <!-- Tailwind -->
+      <script src="https://cdn.tailwindcss.com"></script>
+
+      <!-- MD Editor -->
+      <link
+        rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.css"
+      />
+      <script src="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.js"></script>
+
+      <!-- MD Renderer -->
+      <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    </head>
+
+    <body class="font-sans bg-gray-100">
+      @Header(c)
+      { children... }
+      @Footer(c)
+    </body>
+  </html>
+
+}
+
+templ Header(c *fiber.Ctx) {
+  <nav class="bg-gradient-to-tr from-gray-900 to-gray-600 p-4 text-white">
+    <div
+      class="container mx-auto flex justify-between items-center"
+      hx-boost="true"
+    >
+      <a href="/"><div class="text-2xl font-bold">Derek Garnett</div></a>
+      <a href="/#contact">Contact</a>
+    </div>
+  </nav>
+}
+
+templ Footer(c *fiber.Ctx) {
+  <footer class="bg-gradient-to-tr from-gray-900 to-gray-600 text-white py-4">
+    <div class="container mx-auto text-center">
+      &copy; { fmt.Sprint(c.Locals("Year")) } Derek Garnett - Tech Solutions Specialist.
+    </div>
+  </footer>
+}

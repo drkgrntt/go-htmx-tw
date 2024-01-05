@@ -1,0 +1,281 @@
+package blog
+
+import (
+	"github.com/drkgrntt/htmx-test/components/layout"
+	"github.com/gofiber/fiber/v2"
+	"github.com/drkgrntt/htmx-test/models"
+	"github.com/drkgrntt/htmx-test/database"
+	"github.com/drkgrntt/htmx-test/utils"
+	"fmt"
+	"net/http"
+	"log"
+)
+
+templ Page(c *fiber.Ctx) {
+	@layout.Render(c) {
+		@BlogPage(c)
+	}
+}
+
+templ Post(c *fiber.Ctx) {
+	@layout.Render(c) {
+		@BlogPostPage(c)
+	}
+}
+
+templ Edit(c *fiber.Ctx) {
+	@layout.Render(c) {
+		@EditBlogPage(c)
+	}
+}
+
+templ EditBlogPage(c *fiber.Ctx) {
+	<div class="mx-auto max-w-2xl w-full p-8 rounded-md">
+		<h1 class="text-3xl font-semibold mb-4">Edit Blog</h1>
+		@blogForm(c, getBlog(c))
+	</div>
+}
+
+templ BlogPostPage(c *fiber.Ctx) {
+	<div class="mx-auto max-w-2xl w-full p-8 rounded-md" hx-boost="true">
+		<h1 class="text-3xl font-semibold mb-4">{ getBlog(c).Title }</h1>
+		<p class="text-gray-600 mb-4">{ getBlog(c).Date.Format("January 2, 2006") }</p>
+		<div md class="flex flex-col gap-4">{ getBlog(c).Content }</div>
+		<a hx-boost="false" href="/blog" class="text-blue-500 hover:underline mt-4 inline-block">&larr; Back to Blog</a>
+	</div>
+
+	<script>
+		window.addEventListener("load", function () {
+			document.querySelectorAll("[md]").forEach(function (element) {
+				element.innerHTML = marked.parse(element.innerHTML);
+			});
+		});
+	</script>
+}
+
+func getBlog(c *fiber.Ctx) *models.Blog {
+	db := database.GetDatabase()
+	var blog models.Blog
+
+	query := `
+		SELECT * FROM blogs
+		WHERE id = $1
+		AND published_at IS NOT NULL
+		AND date < NOW();
+	`
+
+	if c.Locals("IsAdmin") == true {
+		query = `
+			SELECT * FROM blogs
+			WHERE id = $1;
+		`
+	}
+
+	err := db.Get(&blog, query, c.Params("id"))
+	log.Println(blog, query, c.Params("id"), err)
+	if err != nil {
+		c.Status(http.StatusNotFound)
+	}
+
+	return &blog
+}
+
+templ BlogPage(c *fiber.Ctx) {
+	<div class="min-h-screen py-4">
+		<div class="max-w-xl mx-auto">
+			<h2 class="text-2xl font-semibold">Blog</h2>
+
+			@blogForm(c, nil)
+
+			<div id="blog-list">
+				for _, blog := range getBlogs(c) {
+					@BlogPost(c, blog)
+				}
+			</div>
+		</div>
+	</div>
+
+	<script>
+		window.addEventListener("load", function () {
+			document.querySelectorAll("[md]").forEach(function (element) {
+				element.innerHTML = marked.parse(element.innerHTML);
+			});
+		});
+	</script>
+}
+
+func getBlogs(c *fiber.Ctx) (blogs []*models.Blog) {
+	db := database.GetDatabase()
+
+	query := `
+		SELECT * FROM blogs
+		WHERE published_at IS NOT NULL
+		AND date < NOW()
+		ORDER BY date DESC;
+	`
+
+	if c.Locals("IsAdmin") == true {
+		query = `
+			SELECT * FROM blogs
+			ORDER BY date DESC;
+		`
+	}
+
+	err := db.Select(&blogs, query)
+	utils.LogFatalError(err)
+
+	return
+}
+
+func blogCardColor(blog *models.Blog) string {
+	if !blog.IsPublished() && blog.IsBeforeDate() {
+		return "bg-pink-50"
+	} else if !blog.IsPublished() {
+		return "bg-red-50"
+	} else if blog.IsBeforeDate() {
+		return "bg-blue-50"
+	}
+
+	return "bg-white"
+}
+
+templ BlogPost(c *fiber.Ctx, blog *models.Blog) {
+	<div class={fmt.Sprintf("my-8 p-4 rounded-md shadow-md relative %s", blogCardColor(blog))}>
+		if c.Locals("IsAdmin") == true {
+			<a
+				href={templ.SafeURL(fmt.Sprintf("/blog/%s/edit", blog.Id))}
+				class="absolute top-2 right-2 text-gray-500 hover:text-gray-700"
+			>
+				<svg
+					xmlns="http://www.w3.org/2000/svg"
+					fill="none"
+					viewBox="0 0 24 24"
+					stroke="currentColor"
+					class="h-6 w-6"
+				>
+					<path
+						stroke-linecap="round"
+						stroke-linejoin="round"
+						stroke-width="2"
+						d="M15 3a2 2 0 012 2v14a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h10zm4 2a2 2 0 011.447.608l1.94 1.94a2 2 0 010 2.828l-8.12 8.12-4.122.573a1 1 0 01-1.244-1.244l.573-4.122 8.12-8.12a2 2 0 012.828 0z"
+					/>
+				</svg>
+			</a>
+		}
+
+		<h3 class="text-xl font-semibold mb-2">{ blog.Title }</h3>
+		<p class="text-gray-600">{ blog.Date.Format("January 2, 2006") }</p>
+
+		<div md class="mt-4 whitespace-pre text-wrap">{ blog.ContentPreview() }</div>
+
+		if blog.HasPreview() {
+			<a href={templ.SafeURL(fmt.Sprintf("/blog/%s", blog.Id))} class="text-blue-500 hover:underline font-semibold">Read more</a>
+		}
+	</div>
+}
+
+templ blogForm(c *fiber.Ctx, blog *models.Blog) {
+	if c.Locals("IsAdmin") == true {
+		<div class="max-w-xl my-4 mx-auto bg-white p-6 rounded-md shadow-md">
+			<form
+				if blog != nil {
+					hx-put={ fmt.Sprintf("/api/blog/%s", blog.Id) }
+					hx-on="htmx:afterRequest:window.location.href = '/blog'"
+				} else {
+					hx-post="/api/blog"
+					hx-swap="afterbegin"
+					hx-target="#blog-list"
+					hx-on="htmx:afterRequest:resetForm(event)"
+				}
+				hx-trigger="submit"
+				class="flex flex-col space-y-4"
+			>
+				<div class="flex space-x-4">
+					<div class="w-1/2">
+						<label for="text-input" class="block text-sm font-medium text-gray-600">Title</label>
+						<input
+							if blog != nil {
+								data-value={ blog.Title }
+							}
+							required
+							type="text"
+							id="text-input"
+							name="title"
+							class="mt-1 p-2 w-full border rounded-md"
+						/>
+					</div>
+
+					<div class="w-1/2">
+						<label for="date-input" class="block text-sm font-medium text-gray-600">Date</label>
+						<input
+							if blog != nil {
+								data-value={ fmt.Sprint(blog.Date) }
+							}
+							required
+							type="date"
+							id="date-input"
+							name="date"
+							class="mt-1 p-2 w-full border rounded-md"
+						/>
+					</div>
+				</div>
+
+				<div>
+					<label for="textarea" class="block text-sm font-medium text-gray-600">Content</label>
+					<textarea
+						if blog != nil {
+							data-value={ blog.Content }
+						}
+						id="content"
+						name="content"
+						rows="4"
+						class="mt-1 p-2 w-full border rounded-md"
+					></textarea>
+				</div>
+
+				<div class="flex items-center mb-4">
+					<input
+						if blog != nil {
+							data-value={ fmt.Sprint(blog.IsPublished()) }
+						}
+						type="checkbox"
+						id="publish"
+						name="publish"
+						class="form-checkbox h-5 w-5 text-cyan-500"
+					/>
+					<label for="publish" class="ml-2 text-gray-700">Publish</label>
+				</div>
+
+				<div>
+					<button
+						type="submit"
+						class="w-full bg-cyan-500 text-white p-2 rounded-md hover:bg-cyan-600"
+					>
+						Submit
+					</button>
+				</div>
+			</form>
+
+			<script>
+				const title = document.querySelector("#text-input")?.dataset.value
+				const date = document.querySelector("#date-input")?.dataset.value
+				const isPublished = document.querySelector("#publish")?.dataset.value
+				const content = document.querySelector("#content")?.dataset.value
+
+				const easyMDE = new EasyMDE();
+
+				function resetForm(event) {
+					if (event.detail.successful) {
+						event.target.reset();
+						easyMDE.value("");
+					}
+				}
+
+				easyMDE.value(content ?? '')
+				document.querySelector("#text-input").value = title ?? ''
+				document.querySelector("#date-input").value = new Date(date).toISOString().split('T')[0];
+				document.querySelector("#publish").checked = isPublished === 'true'
+			</script>
+		</div>
+	}
+}

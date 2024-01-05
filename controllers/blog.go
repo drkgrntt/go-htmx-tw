@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/drkgrntt/htmx-test/database"
+	"github.com/drkgrntt/htmx-test/handlers"
 	"github.com/drkgrntt/htmx-test/models"
 	"github.com/drkgrntt/htmx-test/utils"
 	"github.com/gofiber/fiber/v2"
@@ -23,68 +24,16 @@ func NewBlogController(views fiber.Router, api fiber.Router) *BlogController {
 
 func (c *BlogController) registerViewRoutes(views fiber.Router) {
 	blog := views.Group("/blog")
-
-	blog.Get("/", c.blogsPage)
-	blog.Get("/:id", c.blogPage)
-}
-
-func (c *BlogController) blogsPage(ctx *fiber.Ctx) error {
-	db := database.GetDatabase()
-	config := utils.GetConfig()
-
-	blogs := []models.Blog{}
-	query := `
-		SELECT * FROM blogs
-		WHERE published_at IS NOT NULL
-		AND date < NOW()
-		ORDER BY date DESC;
-	`
-
-	if config.Environment == "development" {
-		query = `
-			SELECT * FROM blogs
-			ORDER BY date DESC;
-		`
-	}
-
-	err := db.Select(&blogs, query)
-	utils.LogFatalError(err)
-
-	return ctx.Render("blog", fiber.Map{"Blogs": blogs})
-}
-
-func (c *BlogController) blogPage(ctx *fiber.Ctx) error {
-	db := database.GetDatabase()
-	config := utils.GetConfig()
-
-	blog := models.Blog{}
-	query := `
-		SELECT * FROM blogs
-		WHERE id = $1
-		AND published_at IS NOT NULL
-		AND date < NOW();
-	`
-
-	if config.Environment == "development" {
-		query = `
-			SELECT * FROM blogs
-			WHERE id = $1;
-		`
-	}
-
-	err := db.Get(&blog, query, ctx.Params("id"))
-	if err != nil {
-		ctx.Status(http.StatusNotFound)
-		return nil
-	}
-
-	return ctx.Render("blog-show", fiber.Map{"Blog": blog})
+	blog.Get("/", handlers.BlogPage)
+	blog.Get("/:id", handlers.BlogPostPage)
+	blog.Get("/:id/edit", handlers.BlogPostEditPage)
 }
 
 func (c *BlogController) registerApiRoutes(api fiber.Router) {
 	blog := api.Group("/blog")
 
 	blog.Post("/", c.createBlog)
+	blog.Put("/:id", c.updateBlog)
 }
 
 type blogPost struct {
@@ -129,5 +78,47 @@ func (c *BlogController) createBlog(ctx *fiber.Ctx) error {
 	err = db.Get(&newBlog, "SELECT * FROM blogs ORDER BY created_at DESC LIMIT 1")
 	utils.LogFatalError(err)
 
-	return ctx.Render("partials/blog-post", newBlog.ToMap(), "")
+	return handlers.BlogPost(ctx, &newBlog)
+}
+
+func (c *BlogController) updateBlog(ctx *fiber.Ctx) error {
+	config := utils.GetConfig()
+	if config.Environment != "development" {
+		ctx.Status(http.StatusUnauthorized)
+		return nil
+	}
+
+	db := database.GetDatabase()
+	var blog models.Blog
+	err := db.Get(&blog, "SELECT * FROM blogs WHERE id = $1 LIMIT 1", ctx.Params("id"))
+	utils.LogFatalError(err)
+
+	body := blogPost{}
+	err = ctx.BodyParser(&body)
+	utils.LogFatalError(err)
+
+	if body.Date == "" {
+		ctx.Status(http.StatusBadRequest)
+		return nil
+	}
+
+	if body.Publish && !blog.IsPublished() {
+		now := time.Now()
+		body.PublishDate = &now
+	}
+
+	db.MustExec(
+		"UPDATE blogs SET date = $1, title = $2, content = $3, published_at = $4, updated_at = $5 WHERE id = $6;",
+		&body.Date,
+		&body.Title,
+		&body.Content,
+		&body.PublishDate,
+		time.Now(),
+		ctx.Params("id"),
+	)
+
+	err = db.Get(&blog, "SELECT * FROM blogs WHERE id = $1 LIMIT 1", ctx.Params("id"))
+	utils.LogFatalError(err)
+
+	return ctx.Status(http.StatusOK).JSON(blog)
 }
