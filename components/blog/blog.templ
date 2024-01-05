@@ -8,7 +8,6 @@ import (
 	"github.com/drkgrntt/htmx-test/utils"
 	"fmt"
 	"net/http"
-	"log"
 )
 
 templ Page(c *fiber.Ctx) {
@@ -72,7 +71,6 @@ func getBlog(c *fiber.Ctx) *models.Blog {
 	}
 
 	err := db.Get(&blog, query, c.Params("id"))
-	log.Println(blog, query, c.Params("id"), err)
 	if err != nil {
 		c.Status(http.StatusNotFound)
 	}
