@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"github.com/drkgrntt/htmx-test/handlers"
 	"github.com/drkgrntt/htmx-test/utils"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/logger"
@@ -27,9 +28,7 @@ func (c *Controller) registerRoutes(app *fiber.App) {
 	views := app.Group("/")
 	views.Get("metrics", monitor.New())
 
-	views.Get("/", func(c *fiber.Ctx) error {
-		return c.Render("landing", fiber.Map{})
-	})
+	views.Get("/", handlers.LandingPage)
 
 	api := app.Group("/api")
 	api.Use(logger.New())

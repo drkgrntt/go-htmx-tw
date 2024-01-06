@@ -102,6 +102,8 @@ func (c *BlogController) updateBlog(ctx *fiber.Ctx) error {
 		return nil
 	}
 
+	body.PublishDate = blog.PublishedAt
+
 	if body.Publish && !blog.IsPublished() {
 		now := time.Now()
 		body.PublishDate = &now

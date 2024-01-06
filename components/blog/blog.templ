@@ -36,11 +36,11 @@ templ EditBlogPage(c *fiber.Ctx) {
 }
 
 templ BlogPostPage(c *fiber.Ctx) {
-	<div class="mx-auto max-w-2xl w-full p-8 rounded-md" hx-boost="true">
+	<div class="mx-auto max-w-2xl w-full p-8 rounded-md">
 		<h1 class="text-3xl font-semibold mb-4">{ getBlog(c).Title }</h1>
 		<p class="text-gray-600 mb-4">{ getBlog(c).Date.Format("January 2, 2006") }</p>
 		<div md class="flex flex-col gap-4">{ getBlog(c).Content }</div>
-		<a hx-boost="false" href="/blog" class="text-blue-500 hover:underline mt-4 inline-block">&larr; Back to Blog</a>
+		<a href="/blog" class="text-blue-500 hover:underline mt-4 inline-block">&larr; Back to Blog</a>
 	</div>
 
 	<script>

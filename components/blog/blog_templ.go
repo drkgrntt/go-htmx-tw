@@ -17,7 +17,6 @@ import (
 	"github.com/drkgrntt/htmx-test/models"
 	"github.com/drkgrntt/htmx-test/utils"
 	"github.com/gofiber/fiber/v2"
-	"log"
 	"net/http"
 )
 
@@ -192,7 +191,7 @@ func BlogPostPage(c *fiber.Ctx) templ.Component {
 			templ_7745c5c3_Var9 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<div class=\"mx-auto max-w-2xl w-full p-8 rounded-md\" hx-boost=\"true\"><h1 class=\"text-3xl font-semibold mb-4\">")
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<div class=\"mx-auto max-w-2xl w-full p-8 rounded-md\"><h1 class=\"text-3xl font-semibold mb-4\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -219,7 +218,7 @@ func BlogPostPage(c *fiber.Ctx) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</div><a hx-boost=\"false\" href=\"/blog\" class=\"text-blue-500 hover:underline mt-4 inline-block\">")
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</div><a href=\"/blog\" class=\"text-blue-500 hover:underline mt-4 inline-block\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -273,7 +272,6 @@ func getBlog(c *fiber.Ctx) *models.Blog {
 	}
 
 	err := db.Get(&blog, query, c.Params("id"))
-	log.Println(blog, query, c.Params("id"), err)
 	if err != nil {
 		c.Status(http.StatusNotFound)
 	}
