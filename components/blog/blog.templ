@@ -30,7 +30,7 @@ templ Edit(c *fiber.Ctx) {
 
 templ EditBlogPage(c *fiber.Ctx) {
 	<div class="mx-auto max-w-2xl w-full p-8 rounded-md">
-		<h1 class="text-3xl font-semibold mb-4">Edit Blog</h1>
+		<h1 class="text-3xl font-semibold mb-4">Edit</h1>
 		@blogForm(c, getBlog(c))
 	</div>
 }
@@ -40,7 +40,7 @@ templ BlogPostPage(c *fiber.Ctx) {
 		<h1 class="text-3xl font-semibold mb-4">{ getBlog(c).Title }</h1>
 		<p class="text-gray-600 mb-4">{ getBlog(c).Date.Format("January 2, 2006") }</p>
 		<div md class="flex flex-col gap-4">{ getBlog(c).Content }</div>
-		<a href="/blog" class="text-blue-500 hover:underline mt-4 inline-block">&larr; Back to Blog</a>
+		<a href="/blog" class="text-blue-500 hover:underline mt-4 inline-block">&larr; Back</a>
 	</div>
 
 	<script>
@@ -81,7 +81,7 @@ func getBlog(c *fiber.Ctx) *models.Blog {
 templ BlogPage(c *fiber.Ctx) {
 	<div class="min-h-screen py-4">
 		<div class="max-w-xl mx-auto">
-			<h2 class="text-2xl font-semibold">Blog</h2>
+			<h2 class="text-2xl font-semibold">Thoughts</h2>
 
 			@blogForm(c, nil)
 
