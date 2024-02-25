@@ -35,6 +35,7 @@ func (c *Controller) registerRoutes(app *fiber.App) {
 
 	NewContactController(views, api)
 	NewBlogController(views, api)
+	NewUtilsController(views, api)
 
 	// Route to display all routes.
 	config := utils.GetConfig()
