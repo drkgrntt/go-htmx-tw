@@ -9,7 +9,7 @@ import (
 	"github.com/drkgrntt/htmx-test/database"
 	"github.com/drkgrntt/htmx-test/utils"
 	"github.com/gofiber/fiber/v2"
-	"github.com/gofiber/template/html/v2"
+	// "github.com/gofiber/template/html/v2"
 )
 
 func main() {
@@ -21,7 +21,7 @@ func main() {
 	database.Connect()
 
 	app := fiber.New(fiber.Config{
-		Views:             html.New("./views", ".html"),
+		// Views:             html.New("./views", ".html"),
 		ViewsLayout:       "layout/main",
 		PassLocalsToViews: true,
 	})

@@ -42,7 +42,7 @@ templ Header(c *fiber.Ctx) {
 			<span
 				class="container mx-auto flex justify-end items-center gap-2 flex-1"
 			>
-				<a href="/#contact">Contact</a>
+				<a href="#contact">Contact</a>
 				if c.Locals("IsAdmin") == true {
 					<a href="/blog">Thoughts</a>
 				}
