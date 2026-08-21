@@ -24,9 +24,13 @@ type Config struct {
 var ConfigInstance Config
 
 func LoadConfig(path string) (config Config, err error) {
-	err = godotenv.Load()
-	if err != nil {
-		log.Fatal("Error loading .env file:", err)
+	// godotenv.Load populates process env vars from a .env file when one is
+	// present (local/air dev). In Docker the vars are already injected via
+	// `env_file` in docker-compose.yml and no .env file exists on disk, so a
+	// missing file here is expected, not fatal — os.Getenv below reads
+	// whatever's already in the environment either way.
+	if loadErr := godotenv.Load(); loadErr != nil && !os.IsNotExist(loadErr) {
+		log.Fatal("Error loading .env file:", loadErr)
 	}
 
 	config = Config{
