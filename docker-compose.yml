@@ -1,0 +1,12 @@
+services:
+  web:
+    build: .
+    container_name: derekgarnett-web
+    restart: unless-stopped
+    # Postgres stays native on the host, so the container shares the host's
+    # network namespace instead of a bridge network. This means DB_HOST=localhost
+    # in .env keeps working unchanged, and nginx keeps proxying to 127.0.0.1:$PORT
+    # exactly as it does for the systemd-run binary today.
+    network_mode: host
+    env_file:
+      - .env
