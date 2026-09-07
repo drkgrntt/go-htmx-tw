@@ -31,7 +31,9 @@ Uses `network_mode: host` so the container's Postgres connection (`DB_HOST=local
 
 ## Configuration
 
-Environment variables (see `.env`, not committed) are loaded once into a package-level `Config` singleton by `utils.LoadConfig` and read anywhere via `utils.GetConfig()`. Key vars: `PORT`, `ENVIRONMENT` (`development` unlocks `/routes` and blog write endpoints), `MG_DOMAIN`/`MG_API_KEY`/`RECIPIENT_EMAIL` (Mailgun), `DB_HOST`/`DB_PORT`/`DB_NAME`/`DB_USER`/`DB_PASSWORD`.
+Environment variables (see `.env`, not committed) are loaded once into a package-level `Config` singleton by `utils.LoadConfig` and read anywhere via `utils.GetConfig()`. Key vars: `PORT`, `ENVIRONMENT` (`development` unlocks `/routes` and blog write endpoints), `MG_DOMAIN`/`MG_API_KEY`/`MG_WEBHOOK_SIGNING_KEY`/`RECIPIENT_EMAIL` (Mailgun), `DB_HOST`/`DB_PORT`/`DB_NAME`/`DB_USER`/`DB_PASSWORD`.
+
+`MG_WEBHOOK_SIGNING_KEY` is the account's **HTTP webhook signing key** (Mailgun dashboard → Account Settings → API Security) — a distinct secret from `MG_API_KEY`, used only to verify inbound webhook requests (see below). Don't confuse it with `MG_API_KEY`: Mailgun signs webhooks with the former, not the latter, and mailgun-go's own `VerifyWebhookSignature` helper checks against the API key, so it can't be used here — `controllers/mail.go` verifies the HMAC itself.
 
 ## Architecture
 
@@ -53,7 +55,7 @@ Admin/write access to the blog (`POST /api/blog`, `PUT /api/blog/:id`, and the v
 - **Inbound** (stranger → alias): a Mailgun route forwards the message here. A row is inserted into `email_relays` (alias, external sender, subject, `Message-Id`) and the content is forwarded to `RECIPIENT_EMAIL`, with `Reply-To` rewritten to `relay+<row id>@<MG_DOMAIN>`.
 - **Outbound** (reply from the personal inbox): replying lands on that `relay+<id>@` address, which a second Mailgun route also forwards here. The row is looked up by `<id>` and a fresh message is sent out **from the original alias** to the original external address, with `In-Reply-To`/`References` set for threading. Guarded so only mail whose `From` matches `RECIPIENT_EMAIL` can trigger an outbound send — otherwise a leaked `relay+<id>@` address could be used to send mail "from" the domain as us.
 
-Every request is verified against Mailgun's webhook signature (`mailgun.VerifyWebhookSignature`, HMAC over `timestamp`+`token` keyed by `MG_API_KEY`) before anything is trusted or stored.
+Every request is verified against Mailgun's webhook signature (HMAC-SHA256 over `timestamp`+`token`, keyed by `MG_WEBHOOK_SIGNING_KEY` — see above) before anything is trusted or stored.
 
 This depends on one-time Mailgun configuration that lives outside the codebase, not in this repo:
 1. **Receiving must be enabled for the domain** (MX records pointed at Mailgun) — separate from whatever's already configured for sending.
@@ -62,4 +64,4 @@ This depends on one-time Mailgun configuration that lives outside the codebase, 
    - action: `forward("https://derekgarnett.com/api/mail/webhook")`
    - It catches both fresh mail to any alias and replies to `relay+<id>@` addresses — `handleWebhook` tells them apart by the `relay+` recipient prefix, so no second route is needed.
 
-No new env vars — it reuses `MG_DOMAIN`, `MG_API_KEY`, and `RECIPIENT_EMAIL`.
+Reuses `MG_DOMAIN`, `MG_API_KEY`, and `RECIPIENT_EMAIL`, plus one new var: `MG_WEBHOOK_SIGNING_KEY` (see above).

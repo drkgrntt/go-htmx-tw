@@ -2,6 +2,10 @@ package controllers
 
 import (
 	"context"
+	"crypto/hmac"
+	"crypto/sha256"
+	"crypto/subtle"
+	"encoding/hex"
 	"encoding/json"
 	"log"
 	"net/http"
@@ -72,13 +76,8 @@ func (c *MailController) handleWebhook(ctx *fiber.Ctx) error {
 		return ctx.SendStatus(http.StatusBadRequest)
 	}
 
-	verified, err := mg.VerifyWebhookSignature(mailgun.Signature{
-		TimeStamp: payload.Timestamp,
-		Token:     payload.Token,
-		Signature: payload.Signature,
-	})
-	if err != nil || !verified {
-		log.Println("mail webhook: rejected unverified request:", err)
+	if !verifySignature(config.MgWebhookSigningKey, payload.Timestamp, payload.Token, payload.Signature) {
+		log.Println("mail webhook: rejected unverified request")
 		return ctx.SendStatus(http.StatusUnauthorized)
 	}
 
@@ -198,6 +197,29 @@ func (c *MailController) send(ctx *fiber.Ctx, mg mailgun.Mailgun, message *mailg
 	}
 
 	return ctx.SendStatus(http.StatusOK)
+}
+
+// verifySignature checks a webhook request's signature per Mailgun's scheme:
+// HMAC-SHA256(timestamp+token) keyed by the account's HTTP webhook signing
+// key (Account Settings → API Security — a distinct secret from the API key
+// used for sending; mailgun-go's own VerifyWebhookSignature helper signs
+// with the API key instead, which never matches).
+func verifySignature(signingKey, timestamp, token, signature string) bool {
+	if signingKey == "" || timestamp == "" || token == "" || signature == "" {
+		return false
+	}
+
+	h := hmac.New(sha256.New, []byte(signingKey))
+	h.Write([]byte(timestamp))
+	h.Write([]byte(token))
+	expected := h.Sum(nil)
+
+	got, err := hex.DecodeString(signature)
+	if err != nil {
+		return false
+	}
+
+	return subtle.ConstantTimeCompare(expected, got) == 1
 }
 
 // parseMailAddress pulls the bare address and display name out of a header

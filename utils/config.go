@@ -8,11 +8,12 @@ import (
 )
 
 type Config struct {
-	Environment    string `mapstructure:"ENVIRONMENT"`
-	ServerPort     string `mapstructure:"PORT"`
-	MgApiKey       string `mapstructure:"MG_API_KEY"`
-	MgDomain       string `mapstructure:"MG_DOMAIN"`
-	RecipientEmail string `mapstructure:"RECIPIENT_EMAIL"`
+	Environment         string `mapstructure:"ENVIRONMENT"`
+	ServerPort          string `mapstructure:"PORT"`
+	MgApiKey            string `mapstructure:"MG_API_KEY"`
+	MgWebhookSigningKey string `mapstructure:"MG_WEBHOOK_SIGNING_KEY"`
+	MgDomain            string `mapstructure:"MG_DOMAIN"`
+	RecipientEmail      string `mapstructure:"RECIPIENT_EMAIL"`
 
 	DbHost     string `mapstructure:"DB_HOST"`
 	DbUser     string `mapstructure:"DB_USER"`
@@ -34,11 +35,12 @@ func LoadConfig(path string) (config Config, err error) {
 	}
 
 	config = Config{
-		Environment:    os.Getenv("ENVIRONMENT"),
-		ServerPort:     os.Getenv("PORT"),
-		MgApiKey:       os.Getenv("MG_API_KEY"),
-		MgDomain:       os.Getenv("MG_DOMAIN"),
-		RecipientEmail: os.Getenv("RECIPIENT_EMAIL"),
+		Environment:         os.Getenv("ENVIRONMENT"),
+		ServerPort:          os.Getenv("PORT"),
+		MgApiKey:            os.Getenv("MG_API_KEY"),
+		MgWebhookSigningKey: os.Getenv("MG_WEBHOOK_SIGNING_KEY"),
+		MgDomain:            os.Getenv("MG_DOMAIN"),
+		RecipientEmail:      os.Getenv("RECIPIENT_EMAIL"),
 
 		DbHost:     os.Getenv("DB_HOST"),
 		DbUser:     os.Getenv("DB_USER"),
