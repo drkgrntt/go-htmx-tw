@@ -29,6 +29,34 @@ docker compose up --build
 ```
 Uses `network_mode: host` so the container's Postgres connection (`DB_HOST=localhost` in `.env`) and nginx reverse proxy keep working unchanged from the pre-Docker systemd setup. `.env` is loaded via `env_file` in `docker-compose.yml`; `godotenv.Load()` in `utils/config.go` tolerates a missing `.env` file (expected inside the container) but fatals on any other load error.
 
+## Deployment
+
+Production runs on the home server reachable via the SSH alias `debian` (host `r-debian`), deployed from `~/sites/derekgarnett.com` there via Docker Compose behind an nginx reverse proxy; a thin systemd unit (`ExecStart=docker compose up -d`) keeps it running across reboots. Standard sequence for a real (non-trivial) change:
+
+1. Commit, push.
+2. Wait for the user's explicit go-ahead ("merge and deploy" or equivalent) — never deploy on your own judgment just because the build succeeds; there's no CI here to defer to either.
+3. `ssh debian "cd ~/sites/derekgarnett.com && git pull --ff-only && docker compose build && docker compose up -d"`.
+4. Check `docker compose logs` for a clean startup, then hit the live site to confirm a real response.
+
+This repo has no feature-branch convention — every commit in its history is direct to `main` (confirm with `git log --all --oneline` before assuming otherwise). Small/doc-only changes (a copy tweak, a `docs/` correction) don't need any extra ceremony either, but still only get committed/pushed/deployed on the user's explicit ask — same gating as a real change, just less process around it.
+
+Never run or touch the user's own local dev server (`air`, `./tmp/main`) directly — treat it as theirs, not something to start/stop/curl on their behalf.
+
+Never `cat`/`tail`/otherwise print a real `.env` file (local or on `debian`) — it's a live secrets file (Mailgun API key, webhook signing key, DB password) and printing it puts every value into the conversation transcript, not just the one you meant to check. To check which keys exist without exposing values, `grep -o '^[A-Z_]*=' .env`; to check whether a specific key has a value set (not what it is), `grep -c '^KEY_NAME=.\+$' .env`. Appending new keys (`printf ... >> .env`) is fine and doesn't require reading the file first.
+
+## Keeping the docs current
+
+Treat updating `CLAUDE.md` and `docs/` as part of finishing a change that touches them, not a separate follow-up to remember later:
+- A new controller, package, or real architectural shift → this file's Architecture section.
+- A new reusable playbook (the email reply-relay pattern in `docs/email-reply-relay-playbook.md` is the existing example, and the Docker/systemd deploy pattern above is documented the same way in memory for reuse across this user's other home-server Go sites) → write it as a standalone, project-agnostic writeup under `docs/`, not just a narrative of what happened in this repo — the point is that it's copyable into a different repo later without re-deriving the gotchas.
+
+## Agent delegation
+
+Not a blanket default — match the subagent to the phase of the task:
+- **Explore** for read-only recon before writing a spec ("where does X live," "what's the existing pattern for Y") — it can't wander into changing anything.
+- **general-purpose (isolation: worktree)** for a fully-specified, self-contained task that doesn't need mid-implementation back-and-forth — this is a small enough codebase that this comes up less often than in larger projects, but the same logic applies when it does.
+- Keep everything else direct: anything needing iterative back-and-forth with the user, the actual deploy (sequential, touches production, gated on explicit go-ahead per above), small edits and doc changes, and anything touching secrets/`.env`.
+
 ## Configuration
 
 Environment variables (see `.env`, not committed) are loaded once into a package-level `Config` singleton by `utils.LoadConfig` and read anywhere via `utils.GetConfig()`. Key vars: `PORT`, `ENVIRONMENT` (`development` unlocks `/routes` and blog write endpoints), `MG_DOMAIN`/`MG_API_KEY`/`MG_WEBHOOK_SIGNING_KEY`/`RECIPIENT_EMAIL` (Mailgun), `DB_HOST`/`DB_PORT`/`DB_NAME`/`DB_USER`/`DB_PASSWORD`.
