@@ -48,7 +48,34 @@ templ TechPage() {
 			digital vision to life? <a href="#contact">Let's chat!</a>
 		</p>
 	}
-	@section("Working With Me", "bg-gray-200") {
+	@section("Recent Work", "bg-gray-200") {
+		@project(
+			"Haier Homes",
+			"https://haierhomes.com",
+			"A Kansas City real estate agent was sending prospects to a scattered mix of Instagram, Zillow, and Facebook with nowhere central to land. Haier Homes gives him one home base for property media and inquiries, with a contact form that lands straight in his inbox instead of getting lost in social DMs.",
+		)
+		@project(
+			"Midwest Daisy Collective",
+			"https://midwestdaisy.com",
+			"A handmade jewelry maker had outgrown selling one-of-a-kind pieces through Instagram comments and DMs. Midwest Daisy Collective turns that catalog into a real storefront, where shoppers can filter down through hundreds of seasonal pieces and check out on their own, with no manual invoicing required.",
+		)
+		@project(
+			"Resonance",
+			"https://resonanceonline.org",
+			"Worship leaders using Planning Center often didn't find out a plan had a problem until after it was already published - a song repeated too soon, a vocalist assigned outside their range, two people who don't work well paired together. Resonance surfaces those conflicts while the plan is still a draft, so they get fixed before the team ever sees them.",
+		)
+		@project(
+			"Duffy Dashboard",
+			"https://duffydashboard.com",
+			"Same-day Broadway ticket buyers have historically had to walk up to the TKTS discount booth in person just to find out what's available and for how much. Duffy Dashboard pulls that pricing and availability online, so people can decide whether it's worth the trip before they go.",
+		)
+		@project(
+			"Contour Journal",
+			"https://contourjournal.com",
+			"Most journaling apps are built to analyze you back - streaks, mood scores, AI feedback on what you wrote. Contour Journal solves the opposite problem: a place to get thoughts out with nothing pulling you toward optimizing them, where any patterns worth noticing surface later, only if you go looking.",
+		)
+	}
+	@section("Working With Me", "") {
 		<div class="border rounded-lg p-4 bg-white shadow-md mb-4">
 			<p class="text-lg text-gray-700 mb-2">
 				"Derek stands out for his exceptional communication and time management skills. His ability to bridge diverse
@@ -78,7 +105,7 @@ templ TechPage() {
 			<p class="text-sm text-gray-600">- Chris</p>
 		</div>
 	}
-	@section("Services", "") {
+	@section("Services", "bg-gray-200") {
 		<div class="max-w-3xl mx-auto flex gap-2 flex-wrap">
 			@service("Websites")
 			@service("Mobile Apps")
@@ -97,7 +124,7 @@ templ TechPage() {
 			@service("Process Automation")
 		</div>
 	}
-	@section("Contact Me", "bg-gray-200") {
+	@section("Contact Me", "") {
 		<p class="text-gray-700">Interested in working together? Reach out!</p>
 		<div class="pt-8" id="contact">
 			@contact.ContactForm()
@@ -120,4 +147,21 @@ templ service(text string) {
 	>
 		{ text }
 	</p>
+}
+
+templ project(title string, url string, description string) {
+	<div class="border rounded-lg p-6 bg-white shadow-md mb-4">
+		<div class="flex justify-between items-start flex-wrap gap-2 mb-2">
+			<h3 class="text-xl font-bold text-gray-800">{ title }</h3>
+			<a
+				href={ templ.URL(url) }
+				target="_blank"
+				rel="noopener noreferrer"
+				class="text-cyan-600 hover:text-cyan-800 font-semibold whitespace-nowrap"
+			>
+				Visit site &rarr;
+			</a>
+		</div>
+		<p class="text-lg text-gray-700">{ description }</p>
+	</div>
 }
